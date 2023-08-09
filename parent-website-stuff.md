@@ -1,0 +1,38 @@
+# What goes into a website
+
+- Brand
+  - Logo
+  - Color Scheme
+  - Offerings
+- Maintainability
+  - write-once, run everywhere?
+  - might you need an app?
+    - if so, what platforms will it need to support
+- Data Collection
+  - stuff like telemetry
+  - do you need "big data?"
+  - systems that may run at scale
+- What browsers are supported
+  - difficult
+    - Internet Explorer??
+    - legacy mobile browsers??
+  - relatively easy
+    - modern destkop browsers
+    - modern mobile browsers
+- shopping cart functionality
+- will users need to be authenticated
+  - if so, that's an entire can of worms in it of itself with
+    - _secure_ data storage
+    - server/databases
+      - self-hosted vs. remote
+- what types of interactions do you expect to happen
+  - "simple" webpage or "web application"
+- website "mood board" to look at to reference in terms of
+  - format/layout
+  - color schemes
+- Search Engine Optimization?
+- How many hands do you expect to maintain it in the future?
+  - do _you_ expect to maintain it?
+    - do you need training
+  - do you expect _me_ to maintain it?
+  - how much documentation do you need
