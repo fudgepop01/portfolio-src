@@ -1,6 +1,8 @@
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   // svelte imports
-  import { tick } from 'svelte';
+  import { tick, mount } from 'svelte';
   // other library imports
   import { marked } from 'marked';
   // helper imports
@@ -20,14 +22,15 @@
 
   const tables = [];
   const structData = [];
-  let TOC = [];
-  let TOCIsActive = false;
-  let sidebarIsActive = false;
-  let lastPage = localStorage.getItem("lastPage");
-  let pages = [];
-  let pageScripts = [];
+  let TOC = $state([]);
+  let TOCIsActive = $state(false);
+  let sidebarIsActive = $state(false);
+  let lastPage = $state(localStorage.getItem("lastPage"));
+  let pages = $state([]);
+  let pageScripts = $state([]);
 
-  let contentElement;
+  let contentElement = $state<HTMLDivElement>();
+  let titleHeaderText = $state("");
 
   const getStructData = () => {
     return localStorage.getItem("structs");
@@ -43,7 +46,7 @@
     }, TOC, pages, pageScripts)
   });
 
-  let markedHTMLOut = "";
+  let markedHTMLOut = $state("");
   const updatePageContent = async () => {
     contentElement.scrollTop = 0;
     localStorage.setItem("lastPage", $currentPath);
@@ -64,31 +67,29 @@
     await tick();
 
     for (const [idx, tableConfig] of tables.entries()) {
-      new StandardTable({
-        target: document.getElementById(`HOTable-${idx}`),
-        props: {
-          tableData: tableConfig,
-          hidden: tables.length > 10
-        }
-      })
+      mount(StandardTable, {
+                target: document.getElementById(`HOTable-${idx}`),
+                props: {
+                  tableData: tableConfig,
+                  hidden: tables.length > 10
+                }
+              })
     }
     
     for (const [idx, {name, properties, functions}] of structData.entries()) {
       console.log(document.getElementById(`structTable-${idx}`));
-      new StructTable({
-        target: document.getElementById(`structTable-${idx}`),
-        props: {
-          name,
-          structData: properties,
-          fnData: functions,
-          hidden: true
-        }
-      })
+      mount(StructTable, {
+                target: document.getElementById(`structTable-${idx}`),
+                props: {
+                  name,
+                  structData: properties,
+                  fnData: functions,
+                  hidden: true
+                }
+              })
     }
 
-    const titleHeader = document.createElement("h6");
-    titleHeader.innerText = $currentPath.replace(/\//g, " > ");
-    document.getElementById("content").prepend(titleHeader);
+    titleHeaderText = $currentPath.replace(/\//g, " > ");
 
     for (const heading of document.querySelectorAll("h1, h2, h3, h4, h5, h6")) {
       heading.classList.add("page-link");
@@ -102,7 +103,7 @@
   // let thing = window.
 
   // incredibly basic implementation - easy to break BUT ALSO very intuitive to use
-  let pageDirStructure = {label: "_root", children: [], collapsed: false};
+  let pageDirStructure = $state({label: "_root", children: [], collapsed: false});
   (async () => {
     const indentSize = 2;
 
@@ -150,7 +151,7 @@
     }
 
     // svelte will update because I said so
-    // pages = pages;
+    pages = pages;
     // pageDirStructure = pageDirStructure;
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -168,18 +169,17 @@
     }
   })();
 
-  $: {
-    $currentPath,
+  $effect(() => {
     updatePageContent();
-  }
+  });
 
 </script>
 
 <header>
-  <button class="sidebarButton" on:click={() => sidebarIsActive = true}> pages </button>
-  <button class="navButton" on:click={() => TOCIsActive = true}> content </button>
+  <button class="sidebarButton" onclick={() => sidebarIsActive = true}> pages </button>
+  <button class="navButton" onclick={() => TOCIsActive = true}> content </button>
 </header>
-<div class="offToggle {sidebarIsActive || TOCIsActive ? 'active' : ''}" on:click={() => {TOCIsActive = false; sidebarIsActive = false;}}></div>
+<div class="offToggle {sidebarIsActive || TOCIsActive ? 'active' : ''}" onclick={() => {TOCIsActive = false; sidebarIsActive = false;}}></div>
 
 <main>
   <div class="sidebar {sidebarIsActive ? 'active' : ''}">
@@ -189,6 +189,7 @@
   </div>
   <div class="content" bind:this={contentElement}>
     <div class="content-wrapper" id="content">
+      <h6>{titleHeaderText}</h6>
       {@html markedHTMLOut}
     </div>
   </div>

@@ -5,13 +5,12 @@ import { copyToClipboard } from "../../helpers/CopyToClipboard";
 
   import { hotLanguageSerialize } from "../../helpers/marked-custom/languages/hotable";
 
-  export let tableData;
-  export let hidden;
-  let rendered = false;
+  let { tableData, hidden = $bindable() } = $props();
+  let rendered = $state(false);
 
-  let editing = false;
+  let editing = $state(false);
 
-  let hotableEl;
+  let hotableEl = $state();
   let hotable: Handsontable;
 
   const createTable = async () => {
@@ -49,17 +48,17 @@ import { copyToClipboard } from "../../helpers/CopyToClipboard";
 </script>
 
 {#if rendered == false}
-  <button on:click={createTable} style="display: block">show table</button>
+  <button onclick={createTable} style="display: block">show table</button>
 {:else}
   {#if editing}
-    <button on:click={stopEdit}>stop editing</button>
-    <button on:click={copy}>copy as markdown</button>
+    <button onclick={stopEdit}>stop editing</button>
+    <button onclick={copy}>copy as markdown</button>
   {:else}
     {#if !hidden}
-      <button on:click={() => hidden = true}>hide table</button>
-      <button on:click={edit}>edit table</button>
+      <button onclick={() => hidden = true}>hide table</button>
+      <button onclick={edit}>edit table</button>
     {:else}
-      <button on:click={() => hidden = false} style="display: block">show table</button>
+      <button onclick={() => hidden = false} style="display: block">show table</button>
     {/if}
   {/if}
   <div bind:this={hotableEl} style="display: {hidden ? 'none' : 'block'}"></div>

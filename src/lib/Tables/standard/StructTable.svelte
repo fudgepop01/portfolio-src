@@ -5,18 +5,20 @@
 
   import { hotLanguageSerialize } from "../../helpers/marked-custom/languages/hotable";
 
-  export let name;
-  export let structData;
-  export let fnData
 
-  export let hidden;
-  let rendered = false;
+  let {
+    name,
+    structData,
+    fnData,
+    hidden = $bindable()
+  } = $props();
+  let rendered = $state(false);
 
-  let editing = false;
+  let editing = $state(false);
 
-  let structTableEl;
+  let structTableEl = $state();
   let structTable: Handsontable;
-  let fnTableEl;
+  let fnTableEl = $state();
   let fnTable: Handsontable;
 
   const createTable = async () => {
@@ -50,17 +52,17 @@
 
 <h5 class="block-heading">{name}</h5>
 {#if rendered == false}
-  <button on:click={createTable} style="display: block">show table</button>
+  <button onclick={createTable} style="display: block">show table</button>
 {:else}
   {#if editing}
-    <button on:click={stopEdit}>stop editing</button>
+    <button onclick={stopEdit}>stop editing</button>
     <!-- <button on:click={copy}>copy as markdown</button> -->
   {:else}
     {#if !hidden}
-      <button on:click={() => hidden = true}>hide table</button>
-      <button on:click={edit}>edit table</button>
+      <button onclick={() => hidden = true}>hide table</button>
+      <button onclick={edit}>edit table</button>
     {:else}
-      <button on:click={() => hidden = false} style="display: block">show table</button>
+      <button onclick={() => hidden = false} style="display: block">show table</button>
     {/if}
   {/if}
     <div class="tables" style="display: {hidden ? 'none' : 'block'}">
