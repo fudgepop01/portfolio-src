@@ -6,6 +6,7 @@ import { structHandler, type structTableData } from "./languages/struct";
 import { currentPath } from "../../stores/locationStore";
 import { get } from "svelte/store";
 import { hostRootAddr } from "../hostRoot";
+// import mj from "mathjax/tex-chtml";
 
 export type codeBlockArgs = {code: string, language: string};
 
@@ -44,12 +45,12 @@ export const rendererFactory = (
       if (href.startsWith("/") || href.startsWith("./") || href.startsWith("..")) {
         const anchorPos = ((href.indexOf("#") == -1) ? undefined : href.indexOf("#"));
         if (href.endsWith(".md")) href = href.substring(0, href.length - 3);
-        // branchless programming go brr
         if (href.charAt(0) === ".") {
           href = (new URL("http://a.b.c/" + folderPath + "/" + href).pathname).substring(1);
         }
+        if (href.charAt(0) === "/") href = href.substring(1);
+        
         // console.log(href)
-        console.log(pages)
         // href = href.substring(+(href.charAt(0) === "."));
         if (pages.includes(href.substring(0, anchorPos))) {
           // @ts-ignore
@@ -59,7 +60,7 @@ export const rendererFactory = (
       } else if (href.startsWith("#")) {
         // @ts-ignore
         return `<a href="${window.location.origin}${window.location.pathname}?page=${localStorage.getItem("lastPage")}&location=${new Slugger().slug(href.substring(1), {dryrun: true})}">${text}</a>`
-      } else if (href.includes("localhost") || href.includes("fudgepop01.github.io/portfolio")) {
+      } else if (href.includes("localhost") || href.includes("fudgepop01.github.io/ac8tmp")) {
         const targetPage = (new URLSearchParams(href.substring(href.indexOf("?")))).get("page");
         if (pages.includes(targetPage))
           return `<a href="${window.location.origin}${window.location.pathname}${href.replace(/https?:\/\/(?:localhost:\d{4}|fudgepop01\.github\.io)/g, "")}">${text}</a>`;
@@ -76,7 +77,7 @@ export const rendererFactory = (
         if (window.location.hostname === "localhost") {
           pageScripts = [...pageScripts, `${window.location.origin}${window.location.pathname}docs/${href.substring(1)}.js`];
         } else if (window.location.origin === "https://fudgepop01.github.io") {
-          pageScripts = [...pageScripts, `https://raw.githubusercontent.com/fudgepop01/fudgepop01.github.io/main/public/docs/${href.substring(1)}.js`];
+          pageScripts = [...pageScripts, `https://raw.githubusercontent.com/fudgepop01/fudgepop01.github.io/main/docs/${href.substring(1)}.js`];
         }
         return '';
       }
@@ -86,7 +87,8 @@ export const rendererFactory = (
         if (href.charAt(0) === ".") {
           href = (new URL("http://a.b.c/" + folderPath + "/" + href).pathname).substring(1);
         }
-        return `<img src="${hostRootAddr + href}" alt="${text}">`
+        return `
+        <div img-container alt="${text}"><img src="${hostRootAddr + href}" alt="${text}"></div>`
       }
       return false;
     }

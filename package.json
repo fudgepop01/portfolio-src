@@ -13,6 +13,7 @@
     "@sveltejs/vite-plugin-svelte": "^6.1.1",
     "@tsconfig/svelte": "^3.0.0",
     "@types/marked": "^4.0.8",
+    "@types/mathjax": "^0.0.40",
     "svelte": "^5.38.1",
     "svelte-check": "^4.3.1",
     "tslib": "^2.5.0",
@@ -21,6 +22,7 @@
   },
   "dependencies": {
     "handsontable": "^16.0.1",
-    "marked": "^4.2.12"
+    "marked": "^4.2.12",
+    "mathjax": "^4.0.0"
   }
 }

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { onMount } from 'svelte';
   import PageNav from './PageNav.svelte';
 
   interface pageDirectory {
@@ -73,6 +74,7 @@
         case "ArrowRight":
         case "Enter": {
           if (evt.target.classList.contains("active")) {
+            // evt.target.style.marginLeft = "-12px";
             focus(evt.target.children.item(1).firstElementChild);
           } else { evt.target.classList.add("active"); }
         } break;
@@ -89,21 +91,62 @@
   const handleKeyLink = (evt: KeyboardEvent, clickEvtHandler: Function) => {
     if (evt.target instanceof HTMLElement) {
       switch (evt.code) {
+        case "ArrowRight":
         case "ArrowDown": handleNewFocus(evt.target, "next"); break;
         case "ArrowUp": handleNewFocus(evt.target, "previous"); break;
         case "Space":
-        case "ArrowRight":
         case "Enter": clickEvtHandler(); break;
         case "ArrowLeft": {
           focus(evt.target.parentElement.parentElement);
         } break;
         case "Tab": handleNewFocus(evt.target, evt.shiftKey ? "next" : "previous"); break;
       }
-    }
-    
+    } 
   }
 
-  // pageDirStructure = pageDirStructure;
+  const handleOpenClose = (evt: MouseEvent, self: HTMLElement) => {
+    const links = self.getElementsByClassName("nav-dir-links")[0] as HTMLDivElement;
+    if (!links.style.maxHeight || parseInt(links.style.maxHeight) < 50) {
+      links.style.maxHeight = `${self.offsetHeight}px`;
+    }
+    self.classList.toggle("active");
+    // if (self.classList.contains("active")) {
+    //   self.style.marginLeft = "-12px";
+    // } else {
+    //   self.style.marginLeft = "0px";
+    // }
+  }
+
+  // const setMaxHeight = (self) => {
+  //   const links = self.getElementsByClassName("nav-dir-links")[0] as HTMLDivElement;
+  //   if (!links.style.maxHeight) {
+  //     for (link of links)
+  //     links.style.maxHeight = `${self.offsetHeight}px`;
+  //   }
+  // }
+
+  let dirLinks = $state<HTMLElement[]>([]);
+  let heightsInitialized = $state(false);
+  $effect(() => {
+    if (!heightsInitialized && dirLinks.length > 0) {
+      const sorted = dirLinks.sort((a, b) => a.depth - b.depth);
+      for (const link of dirLinks) {
+        if (!link.style.maxHeight) {
+          let totalHeight = 0;
+          for (const specificLink of link.children) {
+            if (specificLink.classList.contains("nav-dir-header")) {
+              totalHeight += parseInt((specificLink.getElementsByClassName("nav-dir-links")[0] as HTMLElement).style.maxHeight);
+            } else {
+              totalHeight += specificLink.clientHeight;
+            }
+          }
+          link.style.maxHeight = `${totalHeight + 35}px`;
+        }
+      }
+      heightsInitialized = true;
+    }
+  })
+
 </script>
 
 {#key pageDirStructure}
@@ -122,12 +165,12 @@
       <div
         role="menuitem"
         class="nav-dir-header {child.collapsed ? '' : "active"}"
-        onclick={function(evt) {evt.stopPropagation(); this.classList.toggle("active")}}
+        onclick={function(evt) {evt.stopPropagation(); handleOpenClose(evt, this);}}
         onkeydown={function(evt) {evt.stopPropagation(); evt.preventDefault(); handleKeySubmenu(evt)}}
         tabindex="0"
       >
-        <span>{child.label}</span>
-        <div class="nav-dir-links" style="max-height: {getChildrenCount(child) * 25}px">
+        <span class="nav-dir-title">{child.label.replace(/_/g, " ")}</span>
+        <div class="nav-dir-links" bind:this={dirLinks[dirLinks.length]}>
           <PageNav
             pageDirStructure={child}
             pageRoot={pageRoot + child.label}
@@ -143,11 +186,26 @@
 <style>
 
 .nav-dir-links {
-  transition: max-height .3s cubic-bezier(0.19, 1, 0.22, 1);
+  transition: max-height .3s cubic-bezier(0.19, 1, 0.22, 1),
+    padding .3s cubic-bezier(0.19, 1, 0.22, 1);
+  
   overflow: hidden;
   background-color: #FFF;
   padding-left: 20px;
   position: relative;
+}
+
+.nav-dir-header {
+  transition: margin-left .3s ease;
+}
+.nav-dir-header.active {
+  margin-left: -10px;
+}
+
+.nav-dir-header.active > .nav-dir-links {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  padding-right: 5px;
 }
 
 .nav-dir-links::before {
@@ -172,12 +230,16 @@
 .nav-dir-header > span {
   display: block;
   position: relative;
-  width: 100%;
   height: 25px;
   line-height: 25px;
   font-weight: bold;
   color: #000;
   user-select: none;
+  margin-left: 15px;
+
+  height: 100%; 
+  width: calc(100% - 20px);
+
 }
 
 .nav-dir-header > span:hover {
@@ -185,11 +247,14 @@
 }
 
 .nav-dir-header > span::before {
-  display: inline-block;
+  display: block;
+  position: absolute;
   content: "›";
-  padding: 0 5px;
+  /* padding: 0 5px; */
   transform: rotate(0deg);
-  /* transition: transform .3s cubic-bezier(0.19, 1, 0.22, 1); */
+  left: -10px;
+  top: 0;
+  transition: transform .3s cubic-bezier(0.19, 1, 0.22, 1);
 }
 
 .nav-dir-header.active > span::before {
@@ -199,16 +264,41 @@
 .nav-link {
   display: flex;
   align-items: center;
-  height: 25px;
+  min-height: 25px;
   padding-left: 10px;
   position: relative;
-  white-space: nowrap;
+  line-height: 20px;
+  /* padding-bottom: 5px; */
+  /* white-space: nowrap; */
   text-overflow: ellipsis;
+}
+
+.nav-link::before {
+  content: '';
+  position: absolute;
+  display: block;
+  right: calc(100% + 10px);
+  height: 5px;
+  width: 5px;
+  /* margin-right: -5px; */
+  background-color: #0004;
+  transition: all .2s ease;
 }
 
 .nav-link:hover {
   background-color: #0001;
   cursor: pointer;
+}
+
+.nav-link:hover::before {
+  content: '';
+  position: absolute;
+  display: block;
+  right: calc(100% + 0px);
+  height: 5px;
+  width: 15px;
+  /* margin-right: -5px; */
+  background-color: #00801048;
 }
 
 .nav-link.current {
@@ -224,7 +314,7 @@
   height: 100%;
   width: 5px;
   /* margin-right: -5px; */
-  background-color: red;
+  background-color: #00b050;
 }
 
 </style>

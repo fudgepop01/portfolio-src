@@ -181,6 +181,25 @@ blockquote {
 img {
   max-width: 100%; }
 
+div[img-container]::after {
+  display: block;
+  content: attr(alt);
+  font-size: 11pt;
+  font-style: italic;
+  width: 100%;
+  text-align: center;
+  padding-bottom: 20px;
+}
+div[img-container] {
+  width: 100%;
+  position: relative;
+}
+div[img-container] img {
+  transform: translate(-50%);
+  margin-left: 50%;
+  max-height: 50vh;
+}
+
 span.frame {
   display: block;
   overflow: hidden; }

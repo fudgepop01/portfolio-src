@@ -2,7 +2,7 @@
   import { run } from 'svelte/legacy';
 
   // svelte imports
-  import { tick, mount } from 'svelte';
+  import { tick, mount, onMount } from 'svelte';
   // other library imports
   import { marked } from 'marked';
   // helper imports
@@ -57,10 +57,10 @@
     markedHTMLOut = marked((await (await fetch(`${hostRootAddr}${$currentPath}.md`)).text()));
     TOC = TOC;
 
-    for (const src of pageScripts) {
-      console.log(src);
-      eval(await (await fetch(src)).text());
-    }
+    // for (const src of pageScripts) {
+    //   console.log(src);
+    //   eval(await (await fetch(src)).text());
+    // }
 
     pageScripts = [];
 
@@ -89,7 +89,7 @@
               })
     }
 
-    titleHeaderText = $currentPath.replace(/\//g, " > ");
+    titleHeaderText = $currentPath.replace(/\//g, " > ").replace(/_/g, " ");
 
     for (const heading of document.querySelectorAll("h1, h2, h3, h4, h5, h6")) {
       heading.classList.add("page-link");
@@ -169,8 +169,24 @@
     }
   })();
 
+  // let mjloaded = $state(false);
+  onMount(() => {
+    let script = document.createElement('script');
+    script.src = "https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js?config=TeX-MML-AM_CHTML";
+    document.head.append(script);
+
+    window.MathJax = {
+      tex: {inlineMath: [['$', '$'], ['\\(', '\\)']]},
+      svg: {fontCache: 'global'}
+    };
+  })
+
   $effect(() => {
-    updatePageContent();
+    updatePageContent().then(() => {
+      if (window.MathJax && window.MathJax.typeset) {
+        window.MathJax.typesetPromise(document.body.children)
+      };
+    });
   });
 
 </script>
@@ -212,28 +228,33 @@ main {
 
 main > .sidebar {
   width: 250px;
-  height: 100vh;
-  box-shadow: inset -2px 0 2px #0004;
+  overflow-x: hidden;
+  word-wrap: normal;
+  height: 100%;
+  /* box-shadow: inset -17px 0 2px #0004; */
   background-color: #FFF;
   flex-shrink: 0;
   overflow-y: scroll;
-  padding-left: 10px;
+  margin-left: -10px;
   padding-top: 10px;
+  padding-right: 10px;
+  scrollbar-gutter: stable both-edges;
 }
 
 /* main > .sidebar::-webkit-scrollbar {
-  display: none;
+  box-sizing: content-box;
 } */
 
 main > .sidebar > .list {
-  width: 100%;
+  width: calc(100% - 12px);
   height: 100%;
   font-size: 16px;
   background-color: #FFF;
+  margin-left: 10px;
 }
 
 main > .content {
-  height: 100vh;
+  height: 100%;
   padding: 10px 20px;
   overflow-y: scroll;
   overflow-x: hidden;
@@ -289,18 +310,31 @@ main > .content > .content-wrapper {
 main > .TOC > ul {
   box-shadow: inset 2px 0 2px #0004;
 
-  padding: 20px;
+  padding: 15px;
   margin: 0;
   width: 200px;
   list-style: none;
-  height: 100vh;
+  height: 100%;
   overflow-y: scroll;
 
   flex-shrink: 0;
+  font-size: 14px;
 }
 
 main > .TOC > ul > li {
   margin: 0;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  border-bottom: 2px solid #0002;
+  border-bottom-style: inset;
+}
+main > .TOC > ul > li::before {
+  content: "•  ";
+  display: inline-block;
+  white-space: pre;
+}
+main > .TOC > ul > li::after {
+  display: block;
 }
 
 :global(.page-link:hover) {
@@ -321,6 +355,10 @@ header {
 }
 
 @media only screen and (max-width: 1000px) {
+  :global(html) {
+    --headerbar-size: 65px;
+  }
+
   main > .sidebar {
     display: block;
     position: fixed;
@@ -345,6 +383,11 @@ header {
     right: -250px;
     z-index: 1002;
     transition: right .3s cubic-bezier(0.19, 1, 0.22, 1);
+    height: 100%;
+  }
+
+  main > .TOC > ul {
+    width: 100%;
   }
 
   main > .TOC.active {
@@ -368,11 +411,15 @@ header {
     transition: background-color .3s cubic-bezier(0.19, 1, 0.22, 1);
   }
 
+  :global(body) {
+    height: calc(100% - var(--headerbar-size));
+  }
+
   /* kinda hacky but it works ahahah */
   header {
     display: block;
     position: fixed;
-    height: 65px;
+    height: var(--headerbar-size);
     padding: 20px;
     top: 0;
     width: 100vw;
@@ -390,14 +437,14 @@ header {
   }
 
   /* main > .content {
-    margin-top: 65px;
-    height: calc(100vh - 65px);
+    margin-top: var(--headerbar-size);
+    height: calc(100vh - var(--headerbar-size));
   } */
 
   main {
     position: absolute;
-    top: 65px;
-    height: calc(100vh - 65px);
+    top: var(--headerbar-size);
+    height: 100%;
   }
 
   :global(.htDimmed) {
